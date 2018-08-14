@@ -2,9 +2,10 @@ package io.github.robertograham.cellularautomata.parsers.common.parser;
 
 import io.github.robertograham.cellularautomata.parsers.common.model.CellularAutomataPattern;
 
+import java.io.IOException;
 import java.io.InputStream;
 
-public interface CellularAutomataPatternParser {
+public interface ICellularAutomataPatternParser<T extends CellularAutomataPattern> {
 
-    CellularAutomataPattern parse(InputStream inputStream);
+    T parse(InputStream inputStream) throws IOException;
 }
