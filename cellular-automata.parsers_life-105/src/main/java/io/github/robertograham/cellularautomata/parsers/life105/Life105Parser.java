@@ -78,17 +78,12 @@ public class Life105Parser extends CellularAutomataPatternParser<Life105Pattern>
 
         List<Cell> cells = new ArrayList<>();
         Coordinate coordinate = new Coordinate(0, 0);
-
-        Long minX = null;
-        Long minY = null;
-        Long maxX = null;
-        Long maxY = null;
+        Long minX = null, minY = null, maxX = null, maxY = null;
 
         for (String encodedCellDataLine : encodedCellDataLines)
             if (encodedCellDataLine.startsWith("#")) {
                 coordinate = getCoordinateFromCellBlockHeader(encodedCellDataLine);
-                long x = coordinate.x();
-                long y = coordinate.y();
+                long x = coordinate.x(), y = coordinate.y();
                 minX = minX == null ? x : x < minX ? x : minX;
                 minY = minY == null ? y : y < minY ? y : minY;
             } else {
@@ -98,8 +93,7 @@ public class Life105Parser extends CellularAutomataPatternParser<Life105Pattern>
                             cells.add(new Cell(coordinate.plusToX(i), 1));
                     coordinate = coordinate.plusToX(statusRun.length());
                 }
-                long x = coordinate.x();
-                long y = coordinate.y() + 1;
+                long x = coordinate.x(), y = coordinate.y() + 1;
                 maxX = maxX == null ? x : x > maxX ? x : maxX;
                 maxY = maxY == null ? y : y > maxY ? y : maxY;
                 coordinate = new Coordinate(x - encodedCellDataLine.length(), y);
@@ -112,8 +106,8 @@ public class Life105Parser extends CellularAutomataPatternParser<Life105Pattern>
         life105Pattern.setHeight((maxY != null ? maxY : minY) - minY);
         life105Pattern.setOrigin(new Coordinate(minX, minY));
 
-        Long finalMinX = minX;
-        Long finalMinY = minY;
+        long finalMinX = minX;
+        long finalMinY = minY;
 
         life105Pattern.cells().addAll(
                 cells.stream()
