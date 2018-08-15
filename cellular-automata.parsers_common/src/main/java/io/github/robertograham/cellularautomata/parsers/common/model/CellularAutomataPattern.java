@@ -49,4 +49,14 @@ public abstract class CellularAutomataPattern {
     public int hashCode() {
         return Objects.hash(properties, cells, comments, origin);
     }
+
+    @Override
+    public String toString() {
+        return "CellularAutomataPattern{" +
+                "properties=" + properties +
+                ", cells=" + cells +
+                ", comments=" + comments +
+                ", origin=" + origin +
+                '}';
+    }
 }

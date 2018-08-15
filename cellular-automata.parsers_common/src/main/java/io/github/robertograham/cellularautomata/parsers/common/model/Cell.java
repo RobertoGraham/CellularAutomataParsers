@@ -38,4 +38,12 @@ public class Cell {
     public int hashCode() {
         return Objects.hash(coordinate, state);
     }
+
+    @Override
+    public String toString() {
+        return "Cell{" +
+                "coordinate=" + coordinate +
+                ", state=" + state +
+                '}';
+    }
 }
