@@ -4,19 +4,11 @@ import io.github.robertograham.cellularautomata.parsers.common.model.Cell;
 import io.github.robertograham.cellularautomata.parsers.common.model.Coordinate;
 import io.github.robertograham.cellularautomata.parsers.common.parser.concrete.CellularAutomataPatternParser;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.InputStream;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.LongStream;
 
 public class Life105Parser extends CellularAutomataPatternParser<Life105Pattern> {
 
@@ -25,30 +17,6 @@ public class Life105Parser extends CellularAutomataPatternParser<Life105Pattern>
     private static final String RULES_REGEX = "#R [0-8]+/[0-8]+";
     private static final String COMMENT_REGEX = "#D(|( .*))";
     private static final Pattern CELL_BLOCK_PATTERN = Pattern.compile("(#P (-?[0-9]+) (-?[0-9]+))|([.*]+)");
-
-    public static void main(String[] args) throws FileNotFoundException, URISyntaxException {
-        Life105Pattern life105Pattern = new Life105Parser().parse(new FileInputStream(new File(Life105Parser.class.getClassLoader().getResource("glider.lif").toURI())));
-
-        System.out.println(life105Pattern);
-
-        System.out.print(LongStream.range(0, life105Pattern.getHeight())
-                .mapToObj(y ->
-                        life105Pattern.cells().stream()
-                                .filter(cell -> y == cell.coordinate().y())
-                                .collect(Collectors.toSet())
-                )
-                .map(coordinatesFilteredByY ->
-                        LongStream.range(0, life105Pattern.getWidth())
-                                .mapToObj(x ->
-                                        coordinatesFilteredByY.stream()
-                                                .filter(cell -> x == cell.coordinate().x())
-                                                .collect(Collectors.toSet())
-                                )
-                                .map(coordinatesFilteredByYAndX -> coordinatesFilteredByYAndX.size() == 0 ? "." : "@")
-                                .collect(Collectors.joining())
-                )
-                .collect(Collectors.joining("\n")));
-    }
 
     @Override
     public Life105Pattern parse(InputStream inputStream) {
@@ -67,53 +35,9 @@ public class Life105Parser extends CellularAutomataPatternParser<Life105Pattern>
 
         Life105Pattern life105Pattern = new Life105Pattern();
 
-        Optional.ofNullable(getRule(trimmedNonEmptyLines))
-                .ifPresent(life105Pattern::setRule);
-
+        Optional.ofNullable(getRule(trimmedNonEmptyLines)).ifPresent(life105Pattern::setRule);
         life105Pattern.comments().addAll(getComments(trimmedNonEmptyLines));
-
-        List<String> encodedCellDataLines = trimmedNonEmptyLines.stream()
-                .filter(line -> line.matches(CELL_BLOCK_PATTERN.pattern()))
-                .collect(Collectors.toList());
-
-        List<Cell> cells = new ArrayList<>();
-        Coordinate coordinate = new Coordinate(0, 0);
-        Long minX = null, minY = null, maxX = null, maxY = null;
-
-        for (String encodedCellDataLine : encodedCellDataLines)
-            if (encodedCellDataLine.startsWith("#")) {
-                coordinate = getCoordinateFromCellBlockHeader(encodedCellDataLine);
-                long x = coordinate.x(), y = coordinate.y();
-                minX = minX == null ? x : x < minX ? x : minX;
-                minY = minY == null ? y : y < minY ? y : minY;
-            } else {
-                for (String statusRun : encodedCellDataLine.split("(?<=(.))(?!\\1)")) {
-                    if (statusRun.startsWith("*"))
-                        for (int i = 0; i < statusRun.length(); i++)
-                            cells.add(new Cell(coordinate.plusToX(i), 1));
-                    coordinate = coordinate.plusToX(statusRun.length());
-                }
-                long x = coordinate.x(), y = coordinate.y() + 1;
-                maxX = maxX == null ? x : x > maxX ? x : maxX;
-                maxY = maxY == null ? y : y > maxY ? y : maxY;
-                coordinate = new Coordinate(x - encodedCellDataLine.length(), y);
-            }
-
-        minX = minX != null ? minX : 0;
-        minY = minY != null ? minY : 0;
-
-        life105Pattern.setWidth((maxX != null ? maxX : minX) - minX);
-        life105Pattern.setHeight((maxY != null ? maxY : minY) - minY);
-        life105Pattern.setOrigin(new Coordinate(minX, minY));
-
-        long finalMinX = minX;
-        long finalMinY = minY;
-
-        life105Pattern.cells().addAll(
-                cells.stream()
-                        .map(cell -> new Cell(new Coordinate(cell.coordinate().x() - finalMinX, cell.coordinate().y() - finalMinY), 1))
-                        .collect(Collectors.toList())
-        );
+        extractAndSetLiveCells(trimmedNonEmptyLines, life105Pattern);
 
         return life105Pattern;
     }
@@ -161,5 +85,42 @@ public class Life105Parser extends CellularAutomataPatternParser<Life105Pattern>
             );
 
         throw new IllegalArgumentException("Impossible for this to be thrown");
+    }
+
+    private void extractAndSetLiveCells(List<String> lines, Life105Pattern life105Pattern) {
+        List<String> encodedCellDataLines = lines.stream()
+                .filter(line -> line.matches(CELL_BLOCK_PATTERN.pattern()))
+                .collect(Collectors.toList());
+
+        Set<Cell> cells = new HashSet<>();
+        Coordinate coordinate = new Coordinate(0, 0);
+        Long minX = null, minY = null, maxX = null, maxY = null;
+
+        for (String encodedCellDataLine : encodedCellDataLines)
+            if (encodedCellDataLine.startsWith("#")) {
+                coordinate = getCoordinateFromCellBlockHeader(encodedCellDataLine);
+                long x = coordinate.x(), y = coordinate.y();
+                minX = minX == null ? x : x < minX ? x : minX;
+                minY = minY == null ? y : y < minY ? y : minY;
+            } else {
+                for (String statusRun : encodedCellDataLine.split("(?<=(.))(?!\\1)")) {
+                    if (statusRun.startsWith("*"))
+                        for (int i = 0; i < statusRun.length(); i++)
+                            cells.add(new Cell(coordinate.plusToX(i), 1));
+                    coordinate = coordinate.plusToX(statusRun.length());
+                }
+                long x = coordinate.x(), y = coordinate.y() + 1;
+                maxX = maxX == null ? x : x > maxX ? x : maxX;
+                maxY = maxY == null ? y : y > maxY ? y : maxY;
+                coordinate = new Coordinate(x - encodedCellDataLine.length(), y);
+            }
+
+        minX = minX != null ? minX : 0;
+        minY = minY != null ? minY : 0;
+
+        life105Pattern.setWidth((maxX != null ? maxX : minX) - minX);
+        life105Pattern.setHeight((maxY != null ? maxY : minY) - minY);
+        life105Pattern.setOrigin(new Coordinate(minX, minY));
+        life105Pattern.cells().addAll(cells);
     }
 }
