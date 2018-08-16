@@ -12,11 +12,11 @@ import java.util.stream.Collectors;
 
 public class Life105Parser extends CellularAutomataPatternParser<Life105Pattern> {
 
-    private static final String REQUIRED_HEADER_REGEX = "#Life 1\\.05";
+    private static final String REQUIRED_HEADER_REGEX = "#Life\\s+1\\.05";
     private static final String NORMAL_RULES_REGEX = "#N";
-    private static final String RULES_REGEX = "#R [0-8]+/[0-8]+";
-    private static final String COMMENT_REGEX = "#D(|( .*))";
-    private static final Pattern CELL_BLOCK_PATTERN = Pattern.compile("(#P (-?[0-9]+) (-?[0-9]+))|([.*]+)");
+    private static final String RULES_REGEX = "#R\\s+[0-8]+/[0-8]+";
+    private static final String COMMENT_REGEX = "#D(|(\\s+.*))";
+    private static final Pattern CELL_BLOCK_PATTERN = Pattern.compile("(#P\\s+(-?[0-9]+)\\s+(-?[0-9]+))|([.*]+)");
 
     @Override
     public Life105Pattern parse(InputStream inputStream) {

@@ -13,6 +13,8 @@
     <modules>
         <module>cellular-automata.parsers_common</module>
         <module>cellular-automata.parsers_life-105</module>
+        <module>cellular-automata.parsers_life-106</module>
+        <module>cellular-automata.parsers_rle</module>
     </modules>
 
 </project>
