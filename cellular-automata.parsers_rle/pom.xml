@@ -23,7 +23,7 @@
         <dependency>
             <groupId>io.github.robertograham.cellular-automata.parsers</groupId>
             <artifactId>common</artifactId>
-            <version>${parent.version}</version>
+            <version>${project.parent.version}</version>
         </dependency>
     </dependencies>
 

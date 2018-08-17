@@ -15,6 +15,7 @@ public class RleParser extends CellularAutomataPatternParser<RlePattern> {
 
     private static final String HEADER_REGEX = "x\\s*=\\s*[0-9]+\\s*,\\s*y\\s*=\\s*[0-9]+(\\s*,\\s*rule\\s*=\\s*.*)?";
     private static final String RULE_REGEX = "#r\\s+.*";
+    private static final String CONCEPTION_DETAILS_REGEX = "#O\\s+.*";
     private static final String COMMENT_REGEX = "#C|c(|(\\s+.*))";
     private static final Pattern ORIGIN_COORDINATE_PATTERN = Pattern.compile("#P|R\\s+(-?[0-9]+)\\s+(-?[0-9]+)");
     private static final String ENCODED_CELL_DATA_LINE_REGEX = "((\\d*[ob$])+!?)|!";
@@ -38,6 +39,7 @@ public class RleParser extends CellularAutomataPatternParser<RlePattern> {
         extractAndSetComments(trimmedNonEmptyLines, rlePattern);
         extractAndSetOrigin(trimmedNonEmptyLines, rlePattern);
         extractAndSetCells(trimmedNonEmptyLines, rlePattern);
+        extractAndSetConceptionDetails(trimmedNonEmptyLines, rlePattern);
 
         return rlePattern;
     }
@@ -111,7 +113,7 @@ public class RleParser extends CellularAutomataPatternParser<RlePattern> {
                 coordinate = new Coordinate(rlePattern.origin().x(), coordinate.y() + length);
             else {
                 if ("o".equals(status))
-                    for (long x = coordinate.x(); x < coordinate.x() + length; x++)
+                    for (var x = coordinate.x(); x < coordinate.x() + length; x++)
                         cells.add(new Cell(coordinate.withX(x), 1));
 
                 coordinate = coordinate.plusToX(length);
@@ -119,5 +121,12 @@ public class RleParser extends CellularAutomataPatternParser<RlePattern> {
         }
 
         rlePattern.cells().addAll(cells);
+    }
+
+    private void extractAndSetConceptionDetails(List<String> trimmedNonEmptyLines, RlePattern rlePattern) {
+        trimmedNonEmptyLines.stream()
+                .filter(line -> line.matches(CONCEPTION_DETAILS_REGEX))
+                .findFirst()
+                .ifPresent(conceptionDetailsLine -> rlePattern.setConceptionDetails(conceptionDetailsLine.substring(2).trim()));
     }
 }
